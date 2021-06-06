@@ -1,0 +1,287 @@
+import Atom.Utility.Encoder
+import org.reflections.Configuration
+import org.reflections.Reflections
+import org.reflections.serializers.JsonSerializer
+import org.reflections.util.ConfigurationBuilder
+
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
+
+buildscript {
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+        maven { url 'https://jitpack.io' }
+        jcenter()
+        google()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+
+    dependencies{
+        classpath "com.github.o7-Fire.Atomic-Library:Atomic:$atomHash"
+        classpath 'org.reflections:reflections:0.9.12'
+        classpath group: 'com.google.code.gson', name: 'gson', version: '2.8.6'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'java-library'
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
+static def getLatestFolder(File fe){
+    ArrayList<File> f = new ArrayList<>();
+    if(!fe.exists())return f;
+    File[] files = fe.listFiles();
+    f.addAll(Arrays.asList(files));
+    f.sort(new Comparator<File>() {
+        @Override
+        public int compare(File o1, File o2) {
+            return o1.getAbsolutePath() <=> o2.getAbsolutePath();
+        }
+    });
+    return f.get(f.size() - 1);
+}
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'java-library'
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+        maven { url 'https://jitpack.io' }
+        jcenter()
+    }
+
+    ext {
+
+        minApi = '14'
+        //automatically detect latest shit
+        sdkRoot = System.getenv("ANDROID_HOME")
+        sdkD8 = sdkRoot + "nope"
+        sdkJar = sdkRoot + "nope"
+        if(new File(sdkRoot).exists()) {
+            try {
+                sdkD8 = new File(getLatestFolder(new File(sdkRoot, 'build-tools/')), "d8").getAbsolutePath()
+                sdkJar = new File(getLatestFolder(new File(sdkRoot, "platforms/")), "android.jar").getAbsolutePath()
+            }catch(Throwable){}
+        }
+        if(new File(sdkJar).exists())
+            println(sdkJar)
+        else
+            sdkJar = new File(sdkRoot, "nope").getAbsolutePath()
+        if(new File(sdkD8).exists())
+            println(sdkD8)
+        else
+            sdkD8 = new File(sdkRoot, "nope").getAbsolutePath()
+        modsBuilder = "javac"
+        if (project.hasProperty("builder"))
+            modsBuilder = builder
+        else
+            modsBuilder = System.getProperty("user.name")
+        try {
+            File f = new File(rootDir, "../Atom"), gradle = new File(rootDir, "gradle.properties");
+            if (f.exists() && gradle.exists()) {
+                String s = new String(Runtime.getRuntime().exec("git rev-parse HEAD", new String[0], f).getInputStream().readAllBytes()).trim();
+                HashMap<String, String> map = Encoder.parseProperty(gradle.toURI().toURL().openStream());
+                map.put("atomHash", s);
+                Files.writeString(gradle.toPath(), Encoder.property(map));
+                atomHash = s;
+            }
+        }catch(ignored){}
+        localAtom =   new File(projectDir.parent, '../Atomm').exists()
+
+        modhjson = "name: \"Ozone-Mindustry\"\n" +
+                "displayName: \"Ozone Mindustry\"\n" +
+                "author: \"o7-Fire\"\n" +
+                "main: \"Premain.EntryPoint\"\n" +
+                "description: \""+ description + "\n\n" + Note +"\"\n" +
+                "minGameVersion: 123\n" +//bitch dare you change this again without proper approval
+                "hidden: true\n"
+        modhjson += "version: " + versionCore+":"+versionDesktop+"\n"
+        if(project.hasProperty("gRepo"))
+            modhjson += "repo: \"" + gRepo +"\" \n"
+        try{
+            File f = new File(rootDir, "mod.hjson")
+            f.delete()
+            Files.write(f.toPath(), modhjson.toString().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+        }catch(Throwable){}
+        Atom = { String name ->
+            if(localAtom){
+                return project(":Atom:$name")
+            }else{
+                //skip to last submodule
+                if(name.contains(':')) name = name.split(':').last()
+                return "com.github.o7-Fire.Atomic-Library:$name:$atomHash"
+            }
+        }
+        def atomMeta = new File(rootDir, "src/resources/Manifest.properties")
+        def manifestMeta = new File(rootDir, "Manifest/src/resources/Manifest.properties")
+        try {
+            atomMeta.delete()
+            atomMeta.createNewFile()
+        }catch(ignored){}
+        try {
+            manifestMeta.delete()
+            manifestMeta.createNewFile()
+        }catch(ignored){}
+        Date d = new Date();
+        Formatter formatter = new Formatter();
+        Calendar c = Calendar.getInstance();
+        c.setTime(d);
+        StringBuilder sb = new StringBuilder();
+        sb.append("#Comment here").append("\n")
+        sb.append("#Dexed mean android support can be used on pc too").append("\n")
+        sb.append("#Recommend to use built in mods browser in mindustry if you want ozone core").append("\n")
+        sb.append("#Note desktop version must use the same mindustry version or else crash\n")
+        sb.append("#why im writing this in .gradle\n")
+        sb.append("AtomHash").append("=").append(atomHash).append("\n")
+        sb.append("ArcHash").append("=").append(arcHash).append("\n")
+        sb.append("MindustryVersion").append("=").append(mindustryVersion).append("\n")
+        sb.append("VHash").append("=").append(version).append("\n")
+        sb.append("ModsBuilder").append("=").append(modsBuilder).append("\n")
+        sb.append("TimeStamp").append("=").append(formatter.format(Locale.UK, "%tl:%tM:%tS %tp %tB %te, %tY", c, c, c, c, c, c, c).toString()).append("\n")
+        sb.append("TimeMilis").append("=").append(String.valueOf(System.currentTimeMillis())).append("\n")
+        sb.append("ManifestVersion").append("=").append("v2.4").append("\n")
+        sb.append("Version.Core").append("=").append(versionCore).append("\n")
+        sb.append("Version.Desktop").append("=").append(versionDesktop).append("\n")
+        sb.append("Version").append("=").append(versionCore+":"+versionDesktop).append("\n")
+
+        sb.append("Note").append("=").append(Note)
+        if(atomMeta.exists()) {
+            Files.write(atomMeta.toPath(), sb.toString().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+        }
+        if(manifestMeta.exists())
+            Files.write(manifestMeta.toPath(), sb.toString().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+
+        //From core to every project
+        dependencies{
+            implementation ('io.sentry:sentry:4.3.0'){
+                exclude group: 'com.google.code.gson', module: "gson"
+            }
+            implementation group: 'info.debatty', name: 'java-string-similarity', version: '2.0.0'
+
+            compileOnly ("com.github.Anuken.Arc:arc-core:$arcHash"){
+                because("provided")
+            }
+            compileOnly ("com.github.Anuken.Arc:backend-sdl:$arcHash"){
+                because("provided")
+            }
+            compileOnly ("com.github.Anuken.Mindustry:core:$mindustryVersion"){
+                because("provided")
+            }
+            compileOnly( group: 'org.jetbrains', name: 'annotations', version: '20.1.0'){
+                because("compile")
+            }
+
+        }
+
+    }
+
+
+}
+
+dependencies {
+    implementation (Atom("Atomic")){
+        exclude group: 'com.javassist', module: 'javassist'
+        exclude group: 'org.reflections', module: 'reflections'
+        because("provided")
+    }
+}
+task deploy(type: Jar) {
+    dependsOn ":Desktop:jar"//make desktop jar
+}
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+jar {
+    archiveFileName = "Ozone.jar"
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    manifest {
+        attributes 'Main-Class': 'Premain.InstallerEntryPoint'
+        attributes 'SplashScreen-Image': 'gif/loading.gif'
+    }
+    from(rootDir){
+        include "mod.hjson"
+        include "icon.png"
+    }
+
+    //collect dependencies needed for desugaring
+    if(new File(sdkD8).exists()) {
+        def files = (configurations.compileClasspath.asList() + configurations.runtimeClasspath.asList() + [new File(sdkJar)])
+        def dependencies = files.collect { "--classpath $it.path" }.join(" ")
+        def cmd = "${sdkD8} $dependencies --min-api ${minApi} --output Dex.jar Ozone.jar"
+        def dir = new File(rootDir, "build/libs/");
+        dir.mkdirs()
+        doLast {
+            if (new File(sdkD8).exists() && new File(sdkJar).exists()) {
+                println(cmd)
+                Runtime.getRuntime().exec(cmd, new String[0], dir).waitForProcessOutput(System.out, System.err)
+            }
+        }
+    }
+}
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+    options.compilerArgs += ["-Xlint:deprecation", "-Xlint:unchecked"]
+    if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
+        options.compilerArgs.addAll(['--release', '8'])
+    }
+    doLast{
+        def collection = configurations.runtimeClasspath + configurations.compileClasspath +  new File(rootDir, "build/classes/java/main").toURI().toURL()
+        URL[] urls = collection.collect {
+            println "Collecting classes using Reflections from " + it
+            it.toURI().toURL()
+        }
+
+
+        // collect all classes
+        ClassLoader classLoader = new URLClassLoader(urls, ClassLoader.systemClassLoader)
+        Configuration config = ConfigurationBuilder.build()
+                .addClassLoader(classLoader)
+                .setUrls(urls)
+        Reflections reflections = new Reflections(config)
+
+        def resDir = new File(rootDir, "/src/resources/")
+        // save as JSON file into the assets folder
+        // (a) generate file for current debug or release build
+        println(reflections.save(new File(resDir,"reflections/Ozone-Core-reflections.json").getAbsolutePath(),
+                new JsonSerializer()).getAbsolutePath())
+    }
+}
+
+task makeJar(type: Jar){
+    dependsOn jar
+    archiveFileName = "Ozone-Dexed.jar"
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+    manifest {
+        attributes 'Main-Class': 'Premain.InstallerEntryPoint'
+        attributes 'SplashScreen-Image': 'gif/loading.gif'
+    }
+    if(new File(sdkD8).exists()) {
+        from() {
+            zipTree(new File(rootDir, "build/libs/Dex.jar"))
+        }
+    }
+    from() {
+        zipTree(new File(rootDir, "build/libs/Ozone.jar"))
+    }
+}
+artifacts {
+    archives sourcesJar
+    archives makeJar
+}
+    sourceSets.main.java.srcDirs += ['src/java']
+    sourceSets.main.resources.srcDirs = [ "src/resources" ]

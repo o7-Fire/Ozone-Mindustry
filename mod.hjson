@@ -1,0 +1,17 @@
+name: "Ozone-Mindustry"
+displayName: "Ozone Mindustry"
+author: "o7-Fire"
+main: "Premain.EntryPoint"
+description: "o7-Fire Ozone Project, a client enhancement mods.
+
+Minimum Requirement:
+Android version:4.0.2.
+CPU: 4Core x 2ghz or 2Core x 3ghz
+RAM: 2GB of free RAM
+
+Wiki:https://github.com/o7-Fire/Mindustry-Ozone/wiki
+
+Changelog: after scrapping a lot of code and frankeinstaineing it, connect diagram and experimental-menu now work"
+minGameVersion: 123
+hidden: true
+version: 0.23.5:0.19.0

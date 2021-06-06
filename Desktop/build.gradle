@@ -1,0 +1,143 @@
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
+
+buildscript {
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+        maven { url 'https://jitpack.io' }
+        jcenter()
+        google()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+
+    dependencies{
+        classpath "com.github.o7-Fire.Atomic-Library:Atomic:$atomHash"
+        classpath 'org.reflections:reflections:0.9.12'
+        classpath group: 'com.google.code.gson', name: 'gson', version: '2.8.6'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'java-library'
+sourceCompatibility = "11"
+targetCompatibility = "11"
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    implementation (Atom("Atomic")){
+        because("provided")
+    }
+    testImplementation rootProject
+    compileOnly (group: 'com.miglayout', name: 'miglayout-core', version: '5.2'){
+        because("runtime")
+    }
+    compileOnly (group: 'com.miglayout', name: 'miglayout-swing', version: '5.2'){
+        because("runtime")
+    }
+    compileOnly (group: 'com.edwardraff', name: 'JSAT', version: '0.0.9'){
+        because("runtime")
+    }
+    implementation rootProject
+
+    implementation (Atom("Desktop")){
+        because("provided")
+    }
+    compileOnly ("com.github.Anuken.Mindustry:desktop:$mindustryVersion"){
+        because("provided")
+    }
+    compileOnly ("com.github.Anuken.Mindustry:annotations:$mindustryVersion"){
+        because("compile")
+    }
+
+
+
+    compileOnly ("io.github.vincenzopalazzo:material-ui-swing:1.1.2-rc1"){
+        because("runtime")
+    }
+
+    compileOnly ('com.github.MinnDevelopment:java-discord-rpc:v2.0.1'){
+        because("provided")
+    }
+    compileOnly ('com.github.javaparser:javaparser-symbol-solver-core:3.16.1'){
+        because("runtime")
+    }
+}
+
+
+//Desktop jar with installer and separated library
+jar {
+    dependsOn ":makeJar"
+    archiveFileName = "Ozone-Desktop.jar"
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    manifest {
+        attributes 'Main-Class': 'Premain.InstallerEntryPoint'
+        attributes 'SplashScreen-Image': 'gif/loading.gif'
+    }
+    StringBuilder sb = new StringBuilder()
+    File txt = new File(rootDir, "Desktop/src/main/resources/dependencies")
+    txt.parentFile.mkdirs()
+    txt.delete()
+    txt.createNewFile()
+    configurations.compileOnly.allDependencies.each { dep ->
+        sb.append('groupId=').append(dep.group).append('\n')
+        sb.append('artifactId=').append(dep.name).append('\n')
+        sb.append('version=').append(dep.version).append('\n')
+        sb.append('type=').append(dep.reason).append('\n\n')
+    }
+    ArrayList<String> done = new ArrayList<>();
+    project.repositories.each {
+        String url = it.url
+        if (url == null) return
+        if (!url.toString().startsWith("http")) return
+        url = url.endsWith("/") ? url.substring(0, url.length() - 1) : url
+        if (done.contains(url.toString())) return
+        done.add(url.toString())
+        sb.append("url=").append(url).append("\n")
+    }
+    Files.write(txt.toPath(), sb.toString().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.CREATE)
+}
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+    options.compilerArgs += ["-Xlint:deprecation", "-Xlint:unchecked"]
+    /*
+    doLast{
+        def collection = configurations.runtimeClasspath + configurations.compileClasspath +  new File(rootDir, "Desktop/build/classes/java/main").toURI().toURL()
+        URL[] urls = collection.collect {
+            println "Collecting classes using Reflections from " + it
+            it.toURI().toURL()
+        }
+
+
+        // collect all classes
+        ClassLoader classLoader = new URLClassLoader(urls, ClassLoader.systemClassLoader)
+        Configuration config = ConfigurationBuilder.build()
+                .addClassLoader(classLoader)
+                .setUrls(urls)
+        Reflections reflections = new Reflections(config)
+
+        def resDir = new File(rootDir, "Desktop/src/main/resources/")
+        // save as JSON file into the assets folder
+        // (a) generate file for current debug or release build
+        println(reflections.save(new File(resDir,"reflections/Ozone-Desktop-reflections.json").getAbsolutePath(),
+                new JsonSerializer()).getAbsolutePath())
+    }
+
+     */
+}
+
+
+artifacts {
+    archives sourcesJar
+    archives jar
+}
