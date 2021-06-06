@@ -1,5 +1,5 @@
 # Project Ozone
-## Note: this is total bullshit by Volas, connect diagram has been fixed but android is "totally" broken.
+## Note: this is total bullshit by Volas, connect diagram has been fixed but android is "totally" broken, about v7 ozone works just dont use ui.
 ![CodeQL](https://github.com/Volas171/Ozone-Mindustry/actions/workflows/codeql-analysis.yml/badge.svg)
 ![Java CI](https://github.com/Volas171/Ozone-Mindustry/actions/workflows/gradle.yml/badge.svg)
 ![](https://img.shields.io/github/v/tag/Volas171/Ozone-Mindustry?label=Mindustry-Ozone)
