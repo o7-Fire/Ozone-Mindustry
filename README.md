@@ -1,7 +1,9 @@
 # Project Ozone
-## Note: connect diagram has been fixed but android is "totally" broken, about v7 ozone works just dont use ui.
 
-## Support totally dropped as of 3:46 pm 11/08/2021 EST
+# Support totally dropped as of 3:46 pm 11/08/2021 EST
+## Schematic Pool And Others will be dropped at 12:00AM 31/12/2021
+
+## Note: connect diagram has been fixed but android is "totally" broken, about v7 ozone works just dont use ui.
 
 ![CodeQL](https://github.com/Volas171/Ozone-Mindustry/actions/workflows/codeql-analysis.yml/badge.svg)
 ![Java CI](https://github.com/Volas171/Ozone-Mindustry/actions/workflows/gradle.yml/badge.svg)
