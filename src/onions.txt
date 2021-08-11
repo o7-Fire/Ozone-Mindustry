@@ -1,4 +1,4 @@
 #as always # is comment
 #srt subtitle : mp3 audio
 #separator = new line
-https://www.o7fire.tk/ozone/Al-Qaeda_Calls_Off_Attack_On_Nations_Capitol_To_Spare_Life_Of_Twilight_Author_-_English.srt=https://www.o7fire.tk/ozone/Al-Qaeda_Calls_Off_Attack_On_Nations_Capitol_To_Spare_Life_Of_Twilight_Author.mp3
+https://www.o7fire.ml/ozone/Al-Qaeda_Calls_Off_Attack_On_Nations_Capitol_To_Spare_Life_Of_Twilight_Author_-_English.srt=https://www.o7fire.ml/ozone/Al-Qaeda_Calls_Off_Attack_On_Nations_Capitol_To_Spare_Life_Of_Twilight_Author.mp3
