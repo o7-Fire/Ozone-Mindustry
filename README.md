@@ -1,6 +1,7 @@
 # Project Ozone
 
 # Support totally dropped as of 3:46 pm 11/08/2021 EST
+
 ## Schematic Pool And Others will be dropped at 12:00AM 31/12/2021
 
 ## Note: connect diagram has been fixed but android is "totally" broken, about v7 ozone works just dont use ui.
